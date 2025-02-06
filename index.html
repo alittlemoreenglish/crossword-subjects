@@ -1,0 +1,616 @@
+
+
+<html><head><base href="." />
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #ffffff;
+    padding: 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(15, 40px);
+    gap: 1px;
+    background: #f0f7ff; /* Changed from #333 to match body background */
+    padding: 2px;
+    border-radius: 4px;
+    margin: 10px; /* Reduced from 20px to 10px */
+  }
+
+  .cell {
+    width: 40px;
+    height: 40px;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: 1px solid black; /* Add border to each cell */
+    position: relative;
+  }
+
+  .cell-number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 12px;
+    font-weight: bold;
+    color: black;
+    z-index: 1;
+  }
+
+  .cell.black {
+    background: #f0f7ff; /* Changed from #333 to match body background */
+    border: none; /* Remove border for black cells */
+  }
+
+  .cell input {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    font-size: 20px;
+    border: none;
+    text-transform: uppercase;
+    background: transparent; /* Make input background transparent */
+    position: relative;
+    z-index: 0;
+  }
+
+  .clues {
+    max-width: 400px;
+    margin: 10px; /* Reduced from 20px to 10px */
+  }
+
+  .clues h3 {
+    margin: 10px 0 5px 0; /* Reduce margins around the "Across:" and "Down:" headings */
+  }
+
+  .clues p {
+    margin: 5px 0; /* Reduce margins between clues */
+  }
+
+  .correct {
+    background: #90EE90;
+  }
+
+  .wrong {
+    background: #FFB6C1;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 10px;
+  }
+
+  button:hover {
+    background: #45a049;
+  }
+
+  .hint {
+    color: #666;
+    font-style: italic;
+    font-size: 0.9em;
+  }
+</style>
+</head><body>
+<h1>Crossword (Subjects & Courses)</h1>
+<div class="grid" id="crossword"></div>
+<div class="clues" id="clues"></div>
+<button onclick="checkAnswers()">Check Answers</button>
+<button onclick="showHint()">Get a Hint</button>
+<button onclick="newCrossword()">New Crossword</button>
+
+<script>
+const wordList = [ 
+  'mathematics', 'physics', 'chemistry', 'biology', 'geography', 'history', 
+  'literature', 'philosophy', 'economics', 'accounting', 'art', 'music',
+  'drama', 'engineering', 'psychology', 'sociology', 'anthropology', 
+  'astronomy', 'politics', 'business', 'marketing', 'statistics', 
+  'education', 'architecture', 'law', 'medicine', 'nursing', 
+  'pharmacy', 'environment', 'agriculture', 'linguistics', 
+  'journalism', 'theology', 'ethics', 'robotics', 'cybersecurity',
+  'programming', 'databases', 'graphicdesign', 'animation',
+  'socialstudies', 'physicslab', 'earthscience', 'biotechnology',
+  'zoology', 'botany', 'archaeology', 'literaryanalysis', 
+  'microbiology', 'oceanography'
+];
+
+const clues = {
+  'mathematics': [
+    'The study of numbers and shapes',
+    'Includes algebra, calculus, and geometry',
+    'Used in science and engineering',
+    'Helps solve real-world problems'
+  ],
+  'physics': [
+    'The study of matter and energy',
+    'Explains how forces and motion work',
+    'Includes concepts like gravity and magnetism',
+    'Foundation for many scientific fields'
+  ],
+  'chemistry': [
+    'The science of substances and reactions',
+    'Involves atoms, molecules, and compounds',
+    'Studies properties and changes of matter',
+    'Used in medicine and industry'
+  ],
+  'biology': [
+    'The study of living organisms',
+    'Covers plants, animals, and humans',
+    'Explores ecosystems and genetics',
+    'Important for medical advancements'
+  ],
+  'geography': [
+    'The study of the Earth and its features',
+    'Includes maps, climates, and landscapes',
+    'Helps understand human-environment interactions',
+    'Important for planning and conservation'
+  ],
+  'history': [
+    'The study of past events',
+    'Includes ancient civilizations and wars',
+    'Helps understand human society',
+    'Involves dates and timelines'
+  ],
+  'literature': [
+    'The study of written works',
+    'Includes poetry, novels, and drama',
+    'Explores themes and storytelling',
+    'Develops critical thinking'
+  ],
+  'philosophy': [
+    'The study of knowledge and existence',
+    'Asks questions about life and reality',
+    'Involves logic and ethics',
+    'Includes famous thinkers like Plato'
+  ],
+  'economics': [
+    'The study of money and markets',
+    'Covers supply, demand, and resources',
+    'Helps analyze financial systems',
+    'Important for business and policy-making'
+  ],
+  'accounting': [
+    'The process of recording financial transactions',
+    'Involves auditing and financial reporting',
+    'Helps businesses manage money',
+    'Requires attention to detail'
+  ],
+  'art': [
+    'Creative expression using various media',
+    'Includes painting and sculpture',
+    'Develops imagination and visual skills',
+    'Appreciated for aesthetics'
+  ],
+  'music': [
+    'The art of sound and rhythm',
+    'Includes instruments and singing',
+    'Can evoke emotions',
+    'Performed in concerts and events'
+  ],
+  'drama': [
+    'The art of acting and performance',
+    'Performed on stage or screen',
+    'Involves storytelling through dialogue',
+    'Develops creativity and confidence'
+  ],
+  'engineering': [
+    'Application of science to design and build',
+    'Includes civil, mechanical, and electrical fields',
+    'Solves technical problems',
+    'Essential for infrastructure development'
+  ],
+  'psychology': [
+    'The study of the mind and behavior',
+    'Explores emotions and mental processes',
+    'Used in therapy and research',
+    'Helps understand human actions'
+  ],
+  'sociology': [
+    'The study of human society',
+    'Covers social behavior and relationships',
+    'Explores cultural and societal trends',
+    'Important for social research'
+  ],
+  'anthropology': [
+    'The study of human cultures and evolution',
+    'Includes archaeology and linguistics',
+    'Explores traditions and human origins',
+    'Used in academic research'
+  ],
+  'astronomy': [
+    'The study of stars and planets',
+    'Explores the universe and space',
+    'Involves telescopes and observations',
+    'Helps understand celestial phenomena'
+  ],
+  'politics': [
+    'The study of government and power',
+    'Involves elections and policies',
+    'Explores political systems',
+    'Important for civic knowledge'
+  ],
+  'business': [
+    'The practice of commerce and trade',
+    'Includes marketing and management',
+    'Essential for economic growth',
+    'Focuses on profitability'
+  ],
+  'marketing': [
+    'Promoting products and services',
+    'Involves advertising strategies',
+    'Studies consumer behavior',
+    'Important for business success'
+  ],
+  'statistics': [
+    'The study of data and analysis',
+    'Involves probability and surveys',
+    'Used in research and decision-making',
+    'Essential for data interpretation'
+  ],
+  'education': [
+    'The process of teaching and learning',
+    'Occurs in schools and universities',
+    'Develops knowledge and skills',
+    'Important for personal growth'
+  ],
+  'architecture': [
+    'The design of buildings',
+    'Involves creativity and engineering',
+    'Focuses on functionality and aesthetics',
+    'Requires technical skills'
+  ],
+  'law': [
+    'The study of legal systems',
+    'Involves rules and regulations',
+    'Used in courts and legal practice',
+    'Essential for justice'
+  ],
+  'medicine': [
+    'The science of healing',
+    'Involves diagnosis and treatment',
+    'Essential for healthcare',
+    'Requires a medical degree'
+  ],
+  'nursing': [
+    'The care of patients',
+    'Involves giving medicine and monitoring health',
+    'Supports doctors in hospitals',
+    'Essential for healthcare'
+  ],
+  'pharmacy': [
+    'The study of drugs and medicine',
+    'Involves prescription and dosage',
+    'Important for healthcare',
+    'Requires knowledge of chemistry'
+  ],
+  'environment': [
+    'The study of ecosystems',
+    'Covers conservation and pollution',
+    'Focuses on sustainability',
+    'Important for the planet'
+  ],
+  'agriculture': [
+    'The science of farming',
+    'Includes crops and livestock',
+    'Essential for food production',
+    'Involves soil management'
+  ],
+  'linguistics': [
+    'The study of language',
+    'Explores grammar and phonetics',
+    'Used in translation and language teaching',
+    'Focuses on human communication'
+  ],
+  'journalism': [
+    'The practice of reporting news',
+    'Involves writing articles and interviews',
+    'Important for public information',
+    'Includes investigative reporting'
+  ],
+  'theology': [
+    'The study of religion',
+    'Explores beliefs and practices',
+    'Involves religious texts',
+    'Focuses on spirituality'
+  ],
+  'ethics': [
+    'The study of moral principles',
+    'Explores right and wrong',
+    'Important for decision-making',
+    'Used in philosophy and law'
+  ],
+  'robotics': [
+    'The study of robots',
+    'Involves programming and mechanics',
+    'Used in automation',
+    'Important for technological advancements'
+  ],
+  'cybersecurity': [
+    'Protecting computer systems',
+    'Involves encryption and monitoring',
+    'Essential for data safety',
+    'Important in IT'
+  ],
+  'programming': [
+    'Writing code for computers',
+    'Developing software and applications',
+    'Uses languages like Python',
+    'Important for tech industries'
+  ],
+  'databases': [
+    'Storing and managing information',
+    'Involves SQL and data structures',
+    'Essential for large organizations',
+    'Focuses on data efficiency'
+  ],
+  'graphicdesign': [
+    'Creating visual content',
+    'Involves layouts and branding',
+    'Used in advertising',
+    'Focuses on creativity'
+  ],
+  'animation': [
+    'Creating moving images',
+    'Used in movies and games',
+    'Involves design and creativity',
+    'Focuses on storytelling'
+  ],
+  'socialstudies': [
+    'The study of human society',
+    'Includes history and geography',
+    'Explores politics and cultures',
+    'Important for civic understanding'
+  ],
+  'physicslab': [
+    'A hands-on part of physics education',
+    'Involves experiments and measurements',
+    'Tests scientific theories',
+    'Focuses on practical applications'
+  ],
+  'earthscience': [
+    'The study of Earth’s processes',
+    'Includes geology and meteorology',
+    'Explores natural disasters',
+    'Focuses on environmental systems'
+  ],
+  'biotechnology': [
+    'The use of technology in biology',
+    'Involves genetics and agriculture',
+    'Used in healthcare and research',
+    'Important for modern science'
+  ],
+  'zoology': [
+    'The study of animals',
+    'Explores animal behavior and habitats',
+    'Important for conservation',
+    'Used in scientific research'
+  ],
+  'botany': [
+    'The study of plants',
+    'Explores plant biology and ecology',
+    'Important for agriculture',
+    'Involves plant classification'
+  ],
+  'archaeology': [
+    'The study of ancient cultures',
+    'Involves excavations and artifacts',
+    'Explores historical evidence',
+    'Important for history'
+  ],
+  'literaryanalysis': [
+    'The study of literature',
+    'Involves themes and symbolism',
+    'Develops critical thinking',
+    'Focuses on text interpretation'
+  ],
+  'microbiology': [
+    'The study of microorganisms',
+    'Includes bacteria and viruses',
+    'Used in medicine and research',
+    'Important for health sciences'
+  ],
+  'oceanography': [
+    'The study of oceans',
+    'Explores marine life and ecosystems',
+    'Focuses on ocean currents',
+    'Important for environmental research'
+  ]
+};
+
+
+function getRandomClue(word) {
+  if (Array.isArray(clues[word])) {
+    return clues[word][Math.floor(Math.random() * clues[word].length)];
+  }
+  return `Definition of ${word}`;
+}
+
+let currentPuzzle = null;
+
+function generateCrossword() {
+  const selectedWords = [];
+  const tempWordList = [...wordList];
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * tempWordList.length);
+    selectedWords.push(tempWordList.splice(randomIndex, 1)[0]);
+  }
+
+  const puzzle = {
+    across: {},
+    down: {}
+  };
+
+  selectedWords.forEach((word, index) => {
+    if (index < 3) {
+      puzzle.across[index + 1] = {
+        word: word.toUpperCase(),
+        row: index * 2,
+        col: 0,
+        clue: getRandomClue(word)
+      };
+    } else {
+      puzzle.down[index - 2] = {
+        word: word.toUpperCase(),
+        row: 0,
+        col: (index - 3) * 2,
+        clue: getRandomClue(word)
+      };
+    }
+  });
+
+  return puzzle;
+}
+
+function createGrid() {
+  const grid = document.getElementById('crossword');
+  grid.innerHTML = '';
+  
+  const maxLength = Math.max(
+    ...Object.values(currentPuzzle.across).map(w => w.word.length),
+    ...Object.values(currentPuzzle.down).map(w => w.word.length)
+  );
+  
+  grid.style.gridTemplateColumns = `repeat(${maxLength + 4}, 40px)`;
+  
+  for (let i = 0; i < maxLength + 4; i++) {
+    for (let j = 0; j < maxLength + 4; j++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      
+      let isPartOfWord = false;
+      let isFirstCell = false;
+      let numberToShow = null;
+      
+      // Check if this cell is the start of any word
+      for (const direction in currentPuzzle) {
+        for (const wordNum in currentPuzzle[direction]) {
+          const word = currentPuzzle[direction][wordNum];
+          if (i === word.row && j === word.col) {
+            isFirstCell = true;
+            numberToShow = wordNum;
+          }
+          if (direction === 'across') {
+            if (i === word.row && j >= word.col && j < word.col + word.word.length) {
+              isPartOfWord = true;
+            }
+          } else {
+            if (j === word.col && i >= word.row && i < word.row + word.word.length) {
+              isPartOfWord = true;
+            }
+          }
+        }
+      }
+
+      if (isPartOfWord) {
+        if (isFirstCell) {
+          const number = document.createElement('div');
+          number.className = 'cell-number';
+          number.textContent = numberToShow;
+          cell.appendChild(number);
+        }
+        const input = document.createElement('input');
+        input.maxLength = 1;
+        input.dataset.row = i;
+        input.dataset.col = j;
+        cell.appendChild(input);
+      } else {
+        cell.classList.add('black');
+      }
+      
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function updateClues() {
+  const cluesDiv = document.getElementById('clues');
+  let cluesHTML = '<h3>Across:</h3>';
+  
+  for (const wordNum in currentPuzzle.across) {
+    cluesHTML += `<p>${wordNum}. ${currentPuzzle.across[wordNum].clue} <span class="hint">(${currentPuzzle.across[wordNum].word.length} letters)</span></p>`;
+  }
+  
+  cluesHTML += '<h3>Down:</h3>';
+  for (const wordNum in currentPuzzle.down) {
+    cluesHTML += `<p>${wordNum}. ${currentPuzzle.down[wordNum].clue} <span class="hint">(${currentPuzzle.down[wordNum].word.length} letters)</span></p>`;
+  }
+  
+  cluesDiv.innerHTML = cluesHTML;
+}
+
+function checkAnswers() {
+  const inputs = document.querySelectorAll('.cell input');
+  inputs.forEach(input => {
+    input.parentElement.classList.remove('correct', 'wrong');
+    
+    const row = parseInt(input.dataset.row);
+    const col = parseInt(input.dataset.col);
+    let correctLetter = null;
+
+    for (const direction in currentPuzzle) {
+      for (const wordNum in currentPuzzle[direction]) {
+        const word = currentPuzzle[direction][wordNum];
+        if (direction === 'across' && row === word.row && col >= word.col && col < word.col + word.word.length) {
+          correctLetter = word.word[col - word.col];
+        } else if (direction === 'down' && col === word.col && row >= word.row && row < word.row + word.word.length) {
+          correctLetter = word.word[row - word.row];
+        }
+      }
+    }
+
+    if (correctLetter) {
+      if (input.value.toUpperCase() === correctLetter) {
+        input.parentElement.classList.add('correct');
+      } else if (input.value) {
+        input.parentElement.classList.add('wrong');
+      }
+    }
+  });
+}
+
+function showHint() {
+  const inputs = document.querySelectorAll('.cell input');
+  const emptyInputs = Array.from(inputs).filter(input => !input.value);
+  
+  if (emptyInputs.length > 0) {
+    const randomInput = emptyInputs[Math.floor(Math.random() * emptyInputs.length)];
+    const row = parseInt(randomInput.dataset.row);
+    const col = parseInt(randomInput.dataset.col);
+    
+    for (const direction in currentPuzzle) {
+      for (const wordNum in currentPuzzle[direction]) {
+        const word = currentPuzzle[direction][wordNum];
+        if (direction === 'across' && row === word.row && col >= word.col && col < word.col + word.word.length) {
+          randomInput.value = word.word[col - word.col];
+        } else if (direction === 'down' && col === word.col && row >= word.row && row < word.row + word.word.length) {
+          randomInput.value = word.word[row - word.row];
+        }
+      }
+    }
+  }
+}
+
+function newCrossword() {
+  currentPuzzle = generateCrossword();
+  createGrid();
+  updateClues();
+}
+
+// Initialize the crossword when the page loads
+newCrossword();
+</script>
+ <div class="footer">Author: Aaron Shi. Released in 2025.</div>
+</body></html>
